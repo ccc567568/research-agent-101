@@ -1,0 +1,182 @@
+import { LessonSection } from "@/components/mdx/lesson-section";
+import { Tip } from "@/components/mdx/tip";
+import { Warning } from "@/components/mdx/warning";
+import { Callout } from "@/components/mdx/callout";
+import { Checklist } from "@/components/mdx/checklist";
+import { Diagram } from "@/components/mdx/diagram";
+import { CodeBlock } from "@/components/mdx/code-block";
+
+<LessonSection number="01" title="为什么需要知道这个？" id="section-01">
+
+你的笔记本性能有限，但实验室有一台装有 8 张 GPU 的服务器。你如何从宿舍的电脑上**远程操作**那台服务器？
+
+答案是 **SSH（Secure Shell）**——科研生的必备技能。不会 SSH，你就无法跑大实验、无法用服务器上的 Agent、无法在组里"蹭"共享算力。
+
+</LessonSection>
+
+<LessonSection number="02" title="先建立直觉" id="section-02">
+
+<Diagram>{`你的笔记本                    互联网                    实验室服务器
+192.168.x.x  ──────────→  公网 IP  ──────────→  内网 IP
+  (私网)                    (路由器)              10.x.x.x
+                                                      │
+                                              端口 22 (SSH)
+                                                      │
+                                              Linux + GPU
+                                              用户名: zhangsan`}</Diagram>
+
+- **IP 地址** = 电脑在网络上的"门牌号"
+- **端口（Port）** = 一扇具体的门，SSH 默认用 22 号门
+- **客户端 / 服务器** = 你发起连接的是客户端，被连接的是服务器
+- **localhost（127.0.0.1）** = "本机"，指向自己
+
+</LessonSection>
+
+<LessonSection number="03" title="核心概念" id="section-03">
+
+### 公网 IP vs 私网 IP
+
+- **私网 IP**（如 `192.168.x.x`、`10.x.x.x`）：局域网内部使用，外面看不到
+- **公网 IP**：互联网上唯一标识，实验室路由器有一个
+
+你从宿舍连接服务器，通常是：笔记本 → 公网/校园网 → 实验室网关 → 服务器
+
+### SSH 是什么？
+
+SSH 是一种**加密的远程登录协议**。连接后，你在 Terminal 里输入的命令，实际在**远程服务器**上执行。
+
+### 第一次登录
+
+<CodeBlock title="基本 SSH 命令" language="bash">{`ssh zhangsan@server.lab.edu.cn`}</CodeBlock>
+
+- `zhangsan` — 服务器上的用户名（实验室分配）
+- `server.lab.edu.cn` — 服务器地址（IP 或域名）
+- 首次连接会问是否信任，输入 `yes`
+- 然后输入密码（或使用密钥，详见后文）
+
+连接成功后，你的 Terminal 提示符可能变成：
+
+```
+zhangsan@gpu-server:~$
+```
+
+这表示你现在在**服务器的 Linux 环境**里操作。
+
+</LessonSection>
+
+<LessonSection number="04" title="一个真实例子" id="section-04">
+
+完整流程：从宿舍跑一个 GPU 训练
+
+1. 打开 Terminal（Windows 可用 Windows Terminal + OpenSSH）
+2. `ssh zhangsan@gpu01.lab.edu`
+3. 输入密码，登录成功
+4. `cd ~/projects/my-exp`
+5. `nvidia-smi` 确认 GPU 空闲
+6. `python train.py` 开始训练
+7. 可以断开 SSH（用 `screen`/`tmux` 保持训练，Part II 会讲）
+
+<Diagram>{`笔记本 Terminal
+    │
+    │  ssh zhangsan@server
+    ▼
+服务器 Terminal  ──→  python train.py  ──→  GPU 计算
+    │
+    │  你看到的就是服务器的输出
+    ▼
+loss: 0.42, epoch 3/100 ...`}</Diagram>
+
+</LessonSection>
+
+<LessonSection number="05" title="自己操作" id="section-05">
+
+### Windows 启用 SSH 客户端
+
+Windows 10/11 通常已内置 OpenSSH 客户端。在 PowerShell 中：
+
+<CodeBlock title="检查 SSH" language="powershell">{`ssh -V`}</CodeBlock>
+
+如果没有，在"设置 → 应用 → 可选功能"中添加 **OpenSSH 客户端**。
+
+### 练习连接（如果有服务器账号）
+
+<CodeBlock title="SSH 登录" language="bash">{`ssh 你的用户名@服务器地址`}</CodeBlock>
+
+登录后尝试：
+
+<CodeBlock title="服务器上的基本命令" language="bash">{`pwd          # 我在哪
+ls           # 这里有什么
+whoami       # 我是谁
+nvidia-smi   # GPU 状态（如果有 GPU）
+exit         # 退出 SSH，回到本机`}</CodeBlock>
+
+<Tip>
+还没有服务器账号？先在本机练习 `ssh localhost`（如果开启了 SSH 服务），或向师兄要测试账号。Part II 会详细讲 VS Code Remote SSH。
+</Tip>
+
+</LessonSection>
+
+<LessonSection number="06" title="Agent 如何使用它？" id="section-06">
+
+**Claude Code、Cursor Agent、Codex** 等 Coding Agent 可以在远程服务器上运行：
+
+- Agent 通过 SSH 连接服务器
+- 在服务器上读文件、改代码、跑命令
+- 你本地只看到一个聊天界面，实际工作在云端
+
+这就是为什么"会 SSH"是使用高级 Agent 的前提——Agent 的操作界面背后，就是一台远程 Linux 机器。
+
+<Callout variant="note" title="Agent ≠ 魔法">
+
+Agent 不能绕过网络：服务器必须可达、账号必须有效、权限必须足够。这些都需要你理解 SSH 的基本概念。
+</Callout>
+
+</LessonSection>
+
+<LessonSection number="07" title="常见错误" id="section-07">
+
+1. **在本地 Terminal 跑需要 GPU 的代码** — 训练要在服务器上跑，不是笔记本上
+2. **断开 SSH 后训练停了** — 需要用 `tmux`/`screen` 或 `nohup`（Part II 讲）
+3. **密码泄露** — 不要在聊天里发密码，不要共享账号
+4. **混淆本机和服务器路径** — `C:\Users\...` 和 `/home/zhangsan/...` 是两套文件系统
+
+<Warning title="安全提醒">
+
+- 不要把服务器密码告诉 Agent 或贴在公开场合
+- 实验室通常会要求用 **SSH 密钥** 而不是密码（后续章节详讲）
+- 完整的账号安全规范在 Part VI 讲解
+</Warning>
+
+</LessonSection>
+
+<LessonSection number="08" title="科研中什么时候遇到？" id="section-08">
+
+- 入学第一天：师兄发服务器地址和账号
+- 每天开工：SSH 登录，检查 GPU，启动实验
+- 用 VS Code Remote SSH 在服务器上写代码
+- 配置 Agent 连接远程开发环境
+- 假期回家：通过校园 VPN + SSH 继续跑实验
+
+</LessonSection>
+
+<LessonSection number="09" title="我学会了吗？" id="section-09">
+
+<Checklist items={[
+  "我能解释 IP、端口、SSH 分别是什么",
+  "我知道客户端和服务器在 SSH 场景下的角色",
+  "我能写出 ssh user@server 格式的登录命令",
+  "我理解登录后命令是在远程服务器上执行",
+  "我知道公网 IP 和私网 IP 的基本区别",
+]} />
+
+</LessonSection>
+
+<LessonSection number="10" title="下一节" id="section-10">
+
+恭喜完成 Part I！你已经建立了电脑、文件、程序、网络的基础认知。
+
+接下来 Part II 将系统学习 **Terminal、VS Code、Git、Python 环境**——把今天学的概念变成日常肌肉记忆。
+
+→ [05 Terminal 与 CLI](/learn/05-terminal-cli)（即将推出）
+
+</LessonSection>

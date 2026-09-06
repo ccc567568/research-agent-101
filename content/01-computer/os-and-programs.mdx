@@ -1,0 +1,163 @@
+import { LessonSection } from "@/components/mdx/lesson-section";
+import { Tip } from "@/components/mdx/tip";
+import { Callout } from "@/components/mdx/callout";
+import { Checklist } from "@/components/mdx/checklist";
+import { Diagram } from "@/components/mdx/diagram";
+import { CodeBlock } from "@/components/mdx/code-block";
+
+<LessonSection number="01" title="为什么需要知道这个？" id="section-01">
+
+你双击一个 `.py` 文件，或者在 Terminal 里输入 `python train.py`，程序就运行了。但它**到底发生了什么**？
+
+理解"程序 → 进程 → 线程"，你才能看懂：
+- 为什么训练时 CPU 和 GPU 利用率不同
+- 为什么 `num_workers=8` 能加速数据加载
+- 为什么有时候要 kill 一个"卡住"的程序
+
+</LessonSection>
+
+<LessonSection number="02" title="先建立直觉" id="section-02">
+
+- **操作系统（OS）** = 管家，管理所有硬件和软件
+- **程序（Program）** = 菜谱，写在纸上的指令
+- **进程（Process）** = 正在做菜的厨师，按菜谱实际操作
+- **线程（Thread）** = 厨师的手，可以同时切菜和炒菜（如果有多只手）
+
+<Diagram>{`代码文件 (.py)  →  程序 (Program)  →  进程 (Process)  →  线程 (Thread)
+   静态               加载到内存           正在运行            实际执行单元`}</Diagram>
+
+Python 是一种**编程语言**。你写的 `.py` 文件是**源代码**，需要 Python **解释器**（一个已经安装好的程序）来执行它。
+
+</LessonSection>
+
+<LessonSection number="03" title="核心概念" id="section-03">
+
+### 操作系统（Operating System）
+
+Windows、Linux、macOS 都是操作系统。它负责：
+- 管理文件系统
+- 分配 CPU、内存、GPU 给各个程序
+- 提供 Terminal、窗口界面等
+
+你将来在**本地 Windows** 写代码，在**远程 Linux 服务器**跑实验——两个 OS，但基本概念相同。
+
+### 程序 vs 进程
+
+| | 程序 | 进程 |
+|---|------|------|
+| 状态 | 静态，存在硬盘上 | 动态，运行在内存中 |
+| 类比 | 菜谱 | 正在做菜的厨师 |
+| 数量 | 一个文件 | 可以同时开多个（多个厨师用同一本菜谱） |
+
+### 线程与并行
+
+- **单线程**：一个厨师一只手，一件事做完再做下一件
+- **多线程**：一个厨师多只手，同时做多件事（适合 I/O：读文件、等网络）
+- **多进程**：多个厨师，各自独立（适合 CPU 密集计算，避免互相干扰）
+
+### CPU vs GPU 并行
+
+- **CPU 多线程**：适合逻辑复杂、分支多的任务
+- **GPU 并行**：适合大量相同运算（矩阵乘法），有成千上万个"小手"同时算
+
+</LessonSection>
+
+<LessonSection number="04" title="一个真实例子" id="section-04">
+
+训练脚本里有这样的参数：
+
+```python
+DataLoader(train_set, batch_size=32, num_workers=8)
+```
+
+含义：
+- 主进程在训练模型（GPU 工作）
+- **8 个子进程**（workers）在后台读图片、做预处理（CPU 工作）
+- 这样 GPU 不用等 CPU 准备好数据
+
+如果 `num_workers=0`，只有主进程读数据，GPU 经常空闲等待——这就是"GPU 利用率只有 10%"的常见原因之一。
+
+</LessonSection>
+
+<LessonSection number="05" title="自己操作" id="section-05">
+
+### 观察进程
+
+**Windows**：按 `Ctrl + Shift + Esc` 打开任务管理器
+- 查看"进程"选项卡
+- 找到 Python，注意 CPU 和内存占用
+
+**Linux**：
+
+<CodeBlock title="查看进程" language="bash">{`# 查看所有 python 进程
+ps aux | grep python
+
+# 实时监控（类似任务管理器）
+top
+# 或更友好的 htop（需安装）`}</CodeBlock>
+
+### 运行一个 Python 程序
+
+<CodeBlock title="Terminal" language="bash">{`# 确保你在 train.py 所在目录，或给出完整路径
+python train.py`}</CodeBlock>
+
+运行后：
+1. OS 启动一个 Python **进程**
+2. 进程加载 `train.py` 的代码到内存
+3. 解释器逐行执行代码
+4. 程序结束或你按 `Ctrl+C`，进程终止
+
+<Tip>
+`Ctrl+C` 是向进程发送"中断"信号，告诉它停止。这在 Terminal 里停掉跑飞的训练非常有用。
+</Tip>
+
+</LessonSection>
+
+<LessonSection number="06" title="Agent 如何使用它？" id="section-06">
+
+Agent 可以帮你：
+- 在后台启动训练脚本
+- 查看哪些进程在占用 GPU（`nvidia-smi` 里的 Processes 部分）
+- 杀死卡住的进程
+
+但它需要你知道"进程是什么"才能理解输出。比如 Agent 说"有一个 zombie python 进程占着 GPU"，你应该知道需要去 kill 它。
+
+</LessonSection>
+
+<LessonSection number="07" title="常见错误" id="section-07">
+
+1. **以为关闭窗口程序就停了** — Terminal 里跑的程序，关窗口可能还在后台跑
+2. **同时启动两个训练抢一张 GPU** — 两个进程抢显存，容易 OOM
+3. **num_workers 设太大** — 超过 CPU 核心数反而变慢
+4. **把 Python 和 .py 文件搞混** — Python 是解释器（程序），`.py` 是你要运行的代码（菜谱）
+
+</LessonSection>
+
+<LessonSection number="08" title="科研中什么时候遇到？" id="section-08">
+
+- 训练"卡住"了，需要找到进程并终止
+- 服务器上多人共用 GPU，看谁占着卡
+- 调试多进程数据加载问题
+- 理解论文里的 "single-threaded baseline"
+
+</LessonSection>
+
+<LessonSection number="09" title="我学会了吗？" id="section-09">
+
+<Checklist items={[
+  "我能解释程序、进程、线程的区别",
+  "我知道 Python 是语言，.py 是源代码文件",
+  "我理解 num_workers 为什么能加速数据加载",
+  "我能用任务管理器或 ps 看到运行中的 Python 进程",
+  "我知道 Ctrl+C 可以中断 Terminal 里的程序",
+]} />
+
+</LessonSection>
+
+<LessonSection number="10" title="下一节" id="section-10">
+
+下一章我们离开本机，学习如何通过网络连接到实验室的 GPU 服务器——**SSH**。
+
+→ [04 网络、服务器与 SSH](/learn/04-network-ssh)
+
+</LessonSection>

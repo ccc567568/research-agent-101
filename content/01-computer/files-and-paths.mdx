@@ -1,0 +1,191 @@
+import { LessonSection } from "@/components/mdx/lesson-section";
+import { Tip } from "@/components/mdx/tip";
+import { Warning } from "@/components/mdx/warning";
+import { Checklist } from "@/components/mdx/checklist";
+import { Diagram } from "@/components/mdx/diagram";
+import { CodeBlock } from "@/components/mdx/code-block";
+
+<LessonSection number="01" title="为什么需要知道这个？" id="section-01">
+
+导师说："数据在 `../data/train.csv`"。Agent 说："请把文件保存到 `~/projects/exp1/output`"。
+
+如果你不理解**路径**，这两句话都是天书。文件系统是所有后续操作的基础：写代码、跑实验、用 Git、连服务器——全部建立在"找到正确的文件"之上。
+
+</LessonSection>
+
+<LessonSection number="02" title="先建立直觉" id="section-02">
+
+把你的电脑想象成一棵**倒过来的树**：
+
+- **根**在最上面（Windows 是 `C:\`，Linux 是 `/`）
+- **树枝**是文件夹（目录、folder、directory 是同一个东西）
+- **树叶**是文件
+
+<Diagram>{`Windows 示例：
+
+C:\
+└── Users\
+    └── 张三\
+        ├── Desktop\
+        ├── Documents\
+        └── research\
+            ├── data\
+            │   └── train.csv
+            ├── code\
+            │   └── train.py
+            └── paper\
+                └── draft.docx`}</Diagram>
+
+<Diagram>{`Linux 服务器示例：
+
+/
+├── home\
+│   └── zhangsan\          ← 你的家目录 ~
+│       └── research\
+├── root\                  ← 管理员家目录
+├── usr\                   ← 系统程序
+├── etc\                   ← 配置文件
+└── data\                  ← 实验室共享数据（常见）`}</Diagram>
+
+</LessonSection>
+
+<LessonSection number="03" title="核心概念" id="section-03">
+
+### 术语对照
+
+| 中文 | 英文 | 说明 |
+|------|------|------|
+| 文件 | file | 存储数据的基本单位，如 `.py`、`.csv`、`.pdf` |
+| 文件夹 | folder / directory | 包含文件和其他文件夹的容器 |
+| 路径 | path | 定位文件的位置描述 |
+
+### 绝对路径 vs 相对路径
+
+- **绝对路径**：从根开始的完整地址
+  - Windows: `C:\Users\张三\research\data\train.csv`
+  - Linux: `/home/zhangsan/research/data/train.csv`
+- **相对路径**：相对于"当前所在位置"
+  - `data/train.csv` — 当前目录下的 data 文件夹里
+  - `../data/train.csv` — 上一级目录的 data 文件夹里
+
+### 特殊符号
+
+| 符号 | 含义 |
+|------|------|
+| `.` | 当前目录 |
+| `..` | 上一级目录 |
+| `~` | 用户家目录（Linux/Mac；Windows 较少用） |
+| `/` | Linux 路径分隔符 |
+| `\\` | Windows 路径分隔符（也接受 `/`） |
+
+</LessonSection>
+
+<LessonSection number="04" title="一个真实例子" id="section-04">
+
+项目结构如下：
+
+<Diagram>{`research/
+├── code/
+│   └── train.py
+├── data/
+│   └── train.csv
+└── output/`}</Diagram>
+
+如果你在 `code/` 目录下运行 `train.py`，代码里写 `../data/train.csv` 的意思是：
+
+1. `..` 回到 `research/`
+2. 进入 `data/`
+3. 打开 `train.csv`
+
+如果写成 `data/train.csv`（没有 `..`），程序会在 `code/data/train.csv` 找文件——**找不到**，报错 `FileNotFoundError`。
+
+</LessonSection>
+
+<LessonSection number="05" title="自己操作" id="section-05">
+
+### Windows：资源管理器
+
+1. 打开文件资源管理器，地址栏会显示当前路径
+2. 在地址栏输入 `%USERPROFILE%` 跳转到你的用户目录
+3. 创建一个文件夹 `research\data`，在里面放一个文本文件
+
+### 命令行预习（Terminal）
+
+在 Windows Terminal 或 PowerShell 中尝试：
+
+<CodeBlock title="Windows PowerShell" language="powershell">{`# 显示当前目录 (Print Working Directory)
+pwd
+
+# 列出当前目录内容 (List)
+ls
+
+# 进入 research 文件夹 (Change Directory)
+cd research
+
+# 返回上一级
+cd ..
+
+# 进入用户目录
+cd $HOME`}</CodeBlock>
+
+Linux 服务器上对应命令相同（`pwd`、`ls`、`cd`），只是路径用 `/`。
+
+<Tip>
+`pwd`、`ls`、`cd` 是三个最重要的命令。本章只需**认得出**它们，Part II 会系统学习 Terminal。
+</Tip>
+
+</LessonSection>
+
+<LessonSection number="06" title="Agent 如何使用它？" id="section-06">
+
+Agent 操作文件时，每一步都涉及路径：
+
+- "读取 `config.yaml`" — 需要知道相对谁的路径
+- "在项目根目录运行" — 需要知道根目录是哪里
+- "保存到 output 文件夹" — 需要该文件夹存在
+
+如果你说"帮我改那个训练文件"而不给路径，Agent 可能改错文件。**养成习惯：跟 Agent 交流时说清楚完整路径或当前工作目录。**
+
+</LessonSection>
+
+<LessonSection number="07" title="常见错误" id="section-07">
+
+1. **混淆 `\\` 和 `/`** — Python 在 Windows 上也接受 `/`，建议统一用 `/`
+2. **相对路径基准点错误** — 相对路径取决于"你在哪里运行命令"，不是取决于文件在哪
+3. **中文路径和空格** — `我的 数据/train.csv` 容易出问题，科研目录建议用英文
+4. **大小写** — Linux 区分大小写，`Data` 和 `data` 是不同的文件夹
+
+<Warning>
+永远不要把数据集放在很深的中文路径下再跑代码。这是新手最常遇到的坑之一。
+</Warning>
+
+</LessonSection>
+
+<LessonSection number="08" title="科研中什么时候遇到？" id="section-08">
+
+- Clone GitHub 项目后，找 `requirements.txt` 在哪
+- 修改配置文件里的 `data_dir` 路径
+- 服务器上数据集在 `/data/shared/imagenet`，你的代码在 `~/projects/`
+- 论文复现：README 说 "put dataset in ./data"
+
+</LessonSection>
+
+<LessonSection number="09" title="我学会了吗？" id="section-09">
+
+<Checklist items={[
+  "我能画出自己的用户目录树状结构",
+  "我能解释绝对路径和相对路径的区别",
+  "我知道 . 和 .. 分别代表什么",
+  "我能区分 Windows 和 Linux 的路径写法",
+  "我能在资源管理器或命令行中找到指定文件",
+]} />
+
+</LessonSection>
+
+<LessonSection number="10" title="下一节" id="section-10">
+
+下一章回答：Python 是什么？一个 `.py` 文件为什么能运行？程序运行后去了哪里？
+
+→ [03 操作系统与程序](/learn/03-os-and-programs)
+
+</LessonSection>

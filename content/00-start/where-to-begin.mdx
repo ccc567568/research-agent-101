@@ -1,0 +1,143 @@
+import { LessonSection } from "@/components/mdx/lesson-section";
+import { Tip } from "@/components/mdx/tip";
+import { Callout } from "@/components/mdx/callout";
+import { Checklist } from "@/components/mdx/checklist";
+import { Diagram } from "@/components/mdx/diagram";
+
+<LessonSection number="01" title="为什么需要知道这个？" id="section-01">
+
+很多同学入学后第一件事就是问："有没有 Cursor / ChatGPT 教程？"——但如果你连**文件在哪里、命令在哪里运行、服务器是什么**都不清楚，Agent 再强大也帮不了你。
+
+本课程的设计顺序是固定的：
+
+**电脑 → 操作系统 → 文件 → Terminal → 服务器 → 代码 → Agent → 科研**
+
+不是反过来。Start Here 这一节帮你判断：你现在处于哪个 LEVEL，应该从哪一章开始读。
+
+</LessonSection>
+
+<LessonSection number="02" title="先建立直觉" id="section-02">
+
+想象你刚搬进一个新实验室。你不会第一天就去操作 million-dollar 的设备——你会先知道：
+
+- 实验室门在哪（**入口**）
+- 水电开关在哪（**基础设施**）
+- 危险品柜在哪（**安全边界**）
+
+学电脑也一样。**Agent 是实验室里最先进的仪器**，但你得先会开门、会找东西、会看说明书。
+
+</LessonSection>
+
+<LessonSection number="03" title="核心概念" id="section-03">
+
+我们用一个简单的 LEVEL 模型帮你定位：
+
+| LEVEL | 描述 | 建议起点 |
+|-------|------|----------|
+| 0 | 只会浏览器和微信 | Part I 第 01 章 |
+| 1 | 理解自己的电脑配置 | Part I 第 02 章 |
+| 2 | 会用文件、路径、基础命令 | Part I 第 03–04 章 |
+| 3+ | 能跑别人的代码 | Part II（即将推出） |
+
+**两个入口按钮的含义：**
+
+- **从零开始** → 你大概率是 LEVEL 0，从第 01 章开始
+- **我已经会基础操作** → 先做下面的自测，再决定跳到哪
+
+</LessonSection>
+
+<LessonSection number="04" title="一个真实例子" id="section-04">
+
+小王是刚入学的社科研究生。导师让他"把 GitHub 上的代码跑一下"。他装了 Cursor，对 AI 说"帮我跑代码"，但：
+
+1. 他不知道项目下载到了哪个文件夹
+2. 不知道要在 Terminal 里运行，而不是在聊天框里
+3. 不知道实验室 GPU 服务器要用 SSH 连接
+
+**问题不在 AI，在于跳过了前四章。**
+
+如果小王先学完 Part I，他会知道：代码是文件、运行需要环境、服务器是另一台电脑——然后再用 Agent，效率会高十倍。
+
+</LessonSection>
+
+<LessonSection number="05" title="自己操作" id="section-05">
+
+### 自测：我会不会这些？
+
+请诚实勾选（心里勾选即可）：
+
+<Checklist items={[
+  "我能说出自己电脑的 CPU、内存大概是什么水平",
+  "我知道 C:\\Users\\我的名字 下面有哪些文件夹",
+  "我理解绝对路径和相对路径的区别",
+  "我知道 .py 文件是什么，运行后会产生进程",
+  "我能用 ssh user@server 登录过远程服务器（或知道这是什么）",
+]} />
+
+**计分：**
+
+- 0–1 项 → 从 [第 01 章](/learn/01-computer-basics) 开始
+- 2–3 项 → 从 [第 02 章](/learn/02-files-and-paths) 开始
+- 4 项 → 从 [第 03 章](/learn/03-os-and-programs) 开始
+- 5 项 → 可以浏览 [第 04 章](/learn/04-network-ssh) 后进入 Part II 预览
+
+<Tip>
+即使你觉得"我会了"，也建议快速扫一遍 Part I 的 Checklist——很多同学以为自己会路径，但遇到 `../data/train.csv` 就懵了。
+</Tip>
+
+</LessonSection>
+
+<LessonSection number="06" title="Agent 如何使用它？" id="section-06">
+
+当你对 Agent 说"帮我连接服务器"时，它需要你提供：
+
+- 服务器地址（IP 或域名）
+- 用户名
+- 认证方式（密码或密钥路径）
+
+如果你不知道这些词是什么意思，Agent 的解释也会像天书。**先建立 LEVEL 0–2 的词汇表**，Agent 才能成为你的翻译官而不是替代品。
+
+</LessonSection>
+
+<LessonSection number="07" title="常见错误" id="section-07">
+
+1. **直接跳到 Agent 章节** — 看到同学用 Cursor 很酷，但自己连 Terminal 都没打开过
+2. **跳过自测** — 高估自己的基础，在第 08 章环境配置时崩溃
+3. **只看不练** — 每章都有 Try It，动手 5 分钟胜过阅读 30 分钟
+4. **在 Windows 上学完就以为懂 Linux** — Part I 会同时铺垫两者，服务器几乎都是 Linux
+
+</LessonSection>
+
+<LessonSection number="08" title="科研中什么时候遇到？" id="section-08">
+
+- 入学第一周：导师发服务器账号
+- 第一篇论文复现：需要 clone 代码、配环境
+- 第一次用 AI 改代码：需要知道改的是哪个文件
+- 开组会：师兄说"你 SSH 上去看看 GPU"
+
+这些场景都假设你已经有 LEVEL 1–2 的基础。Start Here 就是避免你在这些时刻手足无措。
+
+</LessonSection>
+
+<LessonSection number="09" title="我学会了吗？" id="section-09">
+
+<Checklist items={[
+  "我能说出自己属于 LEVEL 0–2 中的哪一级",
+  "我知道本课程的正确学习顺序，不会先跳 Agent",
+  "我完成了自测并确定了起始章节",
+  "我理解「从零开始」和「已经会基础操作」两个入口的区别",
+]} />
+
+</LessonSection>
+
+<LessonSection number="10" title="下一节" id="section-10">
+
+<Callout variant="note" title="推荐路径">
+
+- **LEVEL 0–1** → [01 电脑到底是什么](/learn/01-computer-basics)
+- **LEVEL 2** → [02 文件、目录与路径](/learn/02-files-and-paths)
+- **自测全过** → [04 网络、服务器与 SSH](/learn/04-network-ssh) 然后等待 Part II
+
+</Callout>
+
+</LessonSection>

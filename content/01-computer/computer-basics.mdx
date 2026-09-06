@@ -1,0 +1,149 @@
+import { LessonSection } from "@/components/mdx/lesson-section";
+import { Tip } from "@/components/mdx/tip";
+import { Warning } from "@/components/mdx/warning";
+import { Callout } from "@/components/mdx/callout";
+import { Checklist } from "@/components/mdx/checklist";
+import { Diagram } from "@/components/mdx/diagram";
+import { CodeBlock } from "@/components/mdx/code-block";
+
+<LessonSection number="01" title="为什么需要知道这个？" id="section-01">
+
+你知道自己电脑是什么 CPU 吗？什么 GPU？有多少内存（RAM）？显存（VRAM）有多少？
+
+如果答不上来，没关系——但如果你想跑深度学习实验、理解"为什么模型 OOM（Out of Memory）"、或者跟师兄讨论"这张卡能不能训 Llama"，你就**必须**能看懂这些数字。
+
+这一章不是让你成为硬件专家，而是建立**看配置单的能力**。
+
+</LessonSection>
+
+<LessonSection number="02" title="先建立直觉" id="section-02">
+
+把电脑想象成一个厨房：
+
+- **CPU** = 主厨，擅长复杂决策和协调，但不太擅长同时做一千道相同的菜
+- **GPU** = 流水线厨房，擅长同时处理大量相同操作（矩阵运算）
+- **RAM** = 操作台空间，正在处理的食材放这里
+- **VRAM** = GPU 专属的操作台，模型和中间结果放这里
+- **SSD/HDD** = 冰箱和仓库，东西存着但不直接加工
+
+<Diagram>{`数据流动（简化）：
+
+普通计算：  硬盘(SSD) → 内存(RAM) → CPU → 结果
+深度学习：  硬盘(SSD) → 内存(RAM) → 显存(VRAM) → GPU → 结果`}</Diagram>
+
+</LessonSection>
+
+<LessonSection number="03" title="核心概念" id="section-03">
+
+### CPU（Central Processing Unit，中央处理器）
+
+电脑的"大脑"。负责运行操作系统、浏览器、Python 解释器，以及协调各部件工作。核心数（如 8 核 16 线程）决定能同时处理多少任务。
+
+### GPU（Graphics Processing Unit，图形处理器）
+
+最初为游戏和图形渲染设计，现在有成千上万个小型计算核心，**特别适合深度学习**中的矩阵乘法。科研中常说的"A100""4090"都是 GPU 型号。
+
+### RAM（Random Access Memory，内存）
+
+断电就消失的快速存储。你打开的每个程序都会占用一部分 RAM。内存不够时，系统会变慢或崩溃。
+
+### VRAM（Video RAM，显存）
+
+GPU 专用的内存。**模型权重、训练时的中间结果**都放在 VRAM 里。这就是为什么"80GB 显存"的 A100 能训大模型，而 8GB 显存的笔记本只能跑小模型。
+
+### SSD / HDD（存储）
+
+SSD（固态硬盘）快，HDD（机械硬盘）慢但便宜。你的代码、数据集、论文 PDF 都存在这里。注意：**存在硬盘上的模型不会自动占用显存**，只有加载到 GPU 时才会。
+
+</LessonSection>
+
+<LessonSection number="04" title="一个真实例子" id="section-04">
+
+师兄说："这台服务器有 8 张 A100，每张 80GB 显存。"
+
+你应该能理解为：
+- 可以同时跑 8 个实验（每张卡一个）
+- 单个模型最大大约能占 70+ GB 显存（要留一些给系统）
+- 如果训练时报 `CUDA out of memory`，说明**显存**不够，不是硬盘不够
+
+另一个场景：训练时 CPU 100%，GPU 只有 10%。
+
+这说明**数据预处理**（读图片、解码）卡在 CPU 上了，GPU 在等数据。后面你会学到 `num_workers=8` 就是让更多 CPU 线程帮你准备数据。
+
+</LessonSection>
+
+<LessonSection number="05" title="自己操作" id="section-05">
+
+### Windows：查看电脑配置
+
+1. 按 `Win + I` 打开**设置**
+2. 进入 **系统 → 关于**
+3. 记录：处理器（CPU）、机带 RAM（内存）、系统类型（64 位）
+
+查看 GPU：
+1. 右键桌面 → **显示设置** → **高级显示**
+2. 或安装 [GPU-Z](https://www.techpowerup.com/gpuz/) 查看详细显卡信息
+
+### Linux 服务器（预习，以后会常用）
+
+<CodeBlock title="查看 GPU" language="bash">{`nvidia-smi`}</CodeBlock>
+
+<CodeBlock title="查看 CPU" language="bash">{`lscpu`}</CodeBlock>
+
+<CodeBlock title="查看内存" language="bash">{`free -h`}</CodeBlock>
+
+<Tip>
+现在不必记住每个命令。先在 Windows 上找到自己的配置，拍照或记下来——以后对比服务器配置时会用到。
+</Tip>
+
+</LessonSection>
+
+<LessonSection number="06" title="Agent 如何使用它？" id="section-06">
+
+当你让 Agent "帮我选一张 GPU 跑实验"时，它需要知道：
+
+- 你的模型大概多大（参数量 → 显存需求）
+- 服务器有哪些 GPU 可用（`nvidia-smi` 输出）
+- batch size 和精度（fp16/bf32）影响显存
+
+如果你看不懂 `nvidia-smi` 的输出，就无法判断 Agent 的建议是否合理。**先学会读配置，再让 Agent 帮你优化。**
+
+</LessonSection>
+
+<LessonSection number="07" title="常见错误" id="section-07">
+
+1. **把内存和显存搞混** — "我电脑 32GB 内存"不能说明能训大模型，要看 VRAM
+2. **以为硬盘大就能训大模型** — 2TB 硬盘 + 8GB 显存 ≠ 能训大模型
+3. **不看配置就下结论** — "肯定是代码 bug" 有时是 OOM
+4. **忽略 CPU 瓶颈** — GPU 利用率低不一定是 GPU 的问题
+
+</LessonSection>
+
+<LessonSection number="08" title="科研中什么时候遇到？" id="section-08">
+
+- 申请实验室 GPU 资源时，要填"需要多少显存"
+- 读论文看到 "trained on 8×A100-80GB"，知道作者用了什么规模
+- 复现论文时，发现 OOM，需要减小 batch size 或换卡
+- 组会汇报："我的实验在单卡 24GB 上跑不通"
+
+</LessonSection>
+
+<LessonSection number="09" title="我学会了吗？" id="section-09">
+
+<Checklist items={[
+  "我能说出 CPU、GPU、RAM、VRAM、SSD 各自的作用",
+  "我能区分「内存不够」和「显存不够」",
+  "我知道数据从硬盘到 GPU 的两条流水线",
+  "我能在 Windows 上查看自己电脑的基本配置",
+  "我看到 nvidia-smi 时知道哪几列是显存信息",
+]} />
+
+</LessonSection>
+
+<LessonSection number="10" title="下一节" id="section-10">
+
+下一章我们学习**文件、目录与路径**——你的电脑本质上是一棵倒过来的树。所有代码、数据、论文，都是这棵树上的节点。
+
+→ [02 文件、目录与路径](/learn/02-files-and-paths)
+
+</LessonSection>
